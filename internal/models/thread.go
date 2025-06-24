@@ -32,6 +32,7 @@ type Thread struct {
 	ScheduledAt      *time.Time           `bson:"scheduled_at,omitempty" json:"scheduled_at,omitempty"`
 	IsScheduled      bool                 `bson:"is_scheduled" json:"is_scheduled"`
 	Language         string               `bson:"language" json:"language"`
+	Status           string               `bson:"status" json:"status"`
 	ContentWarning   string               `bson:"content_warning" json:"content_warning"`
 	IsSensitive      bool                 `bson:"is_sensitive" json:"is_sensitive"`
 	CreatedAt        time.Time            `bson:"created_at" json:"created_at"`
