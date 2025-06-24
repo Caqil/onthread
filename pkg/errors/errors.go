@@ -213,10 +213,6 @@ func NewRateLimitError(message string) *AppError {
 	return NewAppError(ErrorTypeRateLimit, "RATE_LIMIT_EXCEEDED", message, http.StatusTooManyRequests)
 }
 
-func NewTooManyRequestsError() *AppError {
-	return NewRateLimitError("Too many requests, please try again later")
-}
-
 func NewTooManyLoginAttemptsError() *AppError {
 	return NewRateLimitError("Too many login attempts, please try again later")
 }
@@ -305,6 +301,16 @@ func NewUnexpectedError(cause error) *AppError {
 	return NewInternalError("An unexpected error occurred", cause)
 }
 
+// NewBadRequestError creates a new bad request error (400)
+func NewBadRequestError(message string) *AppError {
+	return &AppError{
+		Type:       "validation_error",
+		Code:       "bad_request",
+		Message:    message,
+		StatusCode: 400,
+	}
+}
+
 // Content errors
 func NewContentTooLongError(contentType string, maxLength int) *AppError {
 	return NewValidationError(
@@ -316,6 +322,166 @@ func NewContentTooLongError(contentType string, maxLength int) *AppError {
 	)
 }
 
+// Additional Authentication/Authorization errors for auth service compatibility
+func NewUnauthorizedError(message string) *AppError {
+	return NewAppError(ErrorTypeAuthentication, "UNAUTHORIZED", message, http.StatusUnauthorized)
+}
+
+func NewForbiddenError(message string) *AppError {
+	return NewAppError(ErrorTypeAuthorization, "FORBIDDEN", message, http.StatusForbidden)
+}
+
+// Validation error with field-specific message (overload)
+func NewValidationFieldError(field, message string) *AppError {
+	return NewValidationError(
+		fmt.Sprintf("%s: %s", field, message),
+		map[string]interface{}{"field": field, "message": message},
+	)
+}
+
+// Not implemented error for placeholder functions
+func NewNotImplementedError(message string) *AppError {
+	return NewAppError(ErrorTypeInternal, "NOT_IMPLEMENTED", message, http.StatusNotImplemented)
+}
+
+// Additional rate limiting errors
+func NewTooManyRequestsError(message string) *AppError {
+	return NewAppError(ErrorTypeRateLimit, "TOO_MANY_REQUESTS", message, http.StatusTooManyRequests)
+}
+
+// Session errors
+func NewSessionExpiredError() *AppError {
+	return NewUnauthorizedError("Session has expired")
+}
+
+func NewSessionNotFoundError() *AppError {
+	return NewUnauthorizedError("Session not found")
+}
+
+// Two-factor authentication errors
+func New2FARequiredError() *AppError {
+	return NewUnauthorizedError("Two-factor authentication required")
+}
+
+func NewInvalid2FACodeError() *AppError {
+	return NewUnauthorizedError("Invalid 2FA code")
+}
+
+func New2FAAlreadyEnabledError() *AppError {
+	return NewConflictError("Two-factor authentication already enabled")
+}
+
+func New2FANotEnabledError() *AppError {
+	return NewConflictError("Two-factor authentication not enabled")
+}
+
+// Email verification errors
+func NewEmailNotVerifiedError() *AppError {
+	return NewForbiddenError("Email verification required")
+}
+
+func NewEmailAlreadyVerifiedError() *AppError {
+	return NewConflictError("Email already verified")
+}
+
+func NewInvalidVerificationTokenError() *AppError {
+	return NewUnauthorizedError("Invalid verification token")
+}
+
+// Password errors
+func NewPasswordTooWeakError() *AppError {
+	return NewValidationError("Password does not meet security requirements", nil)
+}
+
+func NewPasswordsMatchError() *AppError {
+	return NewValidationError("New password must be different from current password", nil)
+}
+
+func NewInvalidPasswordError() *AppError {
+	return NewUnauthorizedError("Current password is incorrect")
+}
+
+// Account status errors
+func NewAccountDisabledError() *AppError {
+	return NewForbiddenError("Account is disabled")
+}
+
+func NewAccountLockedError() *AppError {
+	return NewForbiddenError("Account is temporarily locked due to suspicious activity")
+}
+
+// OAuth errors
+func NewOAuthError(provider, message string) *AppError {
+	return NewAppError(ErrorTypeExternal, "OAUTH_ERROR",
+		fmt.Sprintf("OAuth error with %s: %s", provider, message),
+		http.StatusBadRequest).
+		WithDetails(map[string]interface{}{"provider": provider})
+}
+
+func NewOAuthStateError() *AppError {
+	return NewUnauthorizedError("Invalid OAuth state parameter")
+}
+
+func NewOAuthCodeError() *AppError {
+	return NewUnauthorizedError("Invalid OAuth authorization code")
+}
+
+// Admin errors
+func NewAdminPermissionDeniedError() *AppError {
+	return NewForbiddenError("Admin permission denied")
+}
+
+func NewInvalidAdminRoleError() *AppError {
+	return NewValidationError("Invalid admin role", nil)
+}
+
+// Security errors
+func NewSecurityViolationError(message string) *AppError {
+	return NewAppError(ErrorTypeAuthentication, "SECURITY_VIOLATION", message, http.StatusForbidden)
+}
+
+func NewSuspiciousActivityError() *AppError {
+	return NewSecurityViolationError("Suspicious activity detected")
+}
+
+func NewBruteForceDetectedError() *AppError {
+	return NewTooManyRequestsError("Too many failed attempts. Account temporarily locked.")
+}
+
+// Device/Session errors
+func NewInvalidDeviceError() *AppError {
+	return NewUnauthorizedError("Invalid device")
+}
+
+func NewTooManySessionsError() *AppError {
+	return NewConflictError("Maximum number of active sessions reached")
+}
+
+// Token errors
+func NewRefreshTokenExpiredError() *AppError {
+	return NewUnauthorizedError("Refresh token has expired")
+}
+
+func NewInvalidRefreshTokenError() *AppError {
+	return NewUnauthorizedError("Invalid refresh token")
+}
+
+func NewAccessTokenExpiredError() *AppError {
+	return NewUnauthorizedError("Access token has expired")
+}
+
+// Backup code errors
+func NewInvalidBackupCodeError() *AppError {
+	return NewUnauthorizedError("Invalid backup code")
+}
+
+func NewBackupCodeAlreadyUsedError() *AppError {
+	return NewUnauthorizedError("Backup code already used")
+}
+
+func NewNoBackupCodesAvailableError() *AppError {
+	return NewConflictError("No backup codes available")
+}
 func NewInappropriateContentError() *AppError {
 	return NewAppError(ErrorTypeValidation, "INAPPROPRIATE_CONTENT",
 		"Content violates community guidelines",

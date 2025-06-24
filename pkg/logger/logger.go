@@ -300,13 +300,6 @@ func WithError(err error) *logrus.Entry {
 	return defaultLogger.WithError(err)
 }
 
-func WithComponent(component string) *logrus.Entry {
-	if defaultLogger == nil {
-		Init()
-	}
-	return defaultLogger.WithComponent(component)
-}
-
 func WithUserID(userID primitive.ObjectID) *logrus.Entry {
 	if defaultLogger == nil {
 		Init()
@@ -520,4 +513,27 @@ func LogWebSocketEvent(ctx context.Context, event string, userID primitive.Objec
 		"event":   event,
 		"user_id": userID.Hex(),
 	}).Debug("WebSocket event")
+}
+
+// NewComponentLogger creates a new logger instance with a specific component
+func NewComponentLogger(component string) *Logger {
+	if defaultLogger == nil {
+		Init()
+	}
+
+	return &Logger{
+		Logger:    defaultLogger.Logger,
+		component: component,
+	}
+}
+
+// Package-level WithComponent function using the default logger
+func WithComponent(component string) *Logger {
+	if defaultLogger == nil {
+		Init()
+	}
+	return &Logger{
+		Logger:    defaultLogger.Logger,
+		component: component,
+	}
 }

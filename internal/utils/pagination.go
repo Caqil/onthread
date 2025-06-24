@@ -35,7 +35,54 @@ type SortParams struct {
 	Field string
 	Order int // 1 for ascending, -1 for descending
 }
+// Add this to your existing internal/utils/pagination.go file
 
+// PaginatedResult represents a paginated result with data and metadata
+type PaginatedResult[T any] struct {
+	Data       []T              `json:"data"`
+	Pagination *PaginationMeta  `json:"pagination"`
+	Total      int64            `json:"total"`
+	Count      int64            `json:"count"`
+}
+
+// NewPaginatedResult creates a new paginated result
+func NewPaginatedResult[T any](data []T, page, limit int, total int64) *PaginatedResult[T] {
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+	
+	hasNext := page < totalPages
+	hasPrev := page > 1
+	
+	var nextPage, prevPage *int
+	if hasNext {
+		next := page + 1
+		nextPage = &next
+	}
+	if hasPrev {
+		prev := page - 1
+		prevPage = &prev
+	}
+
+	return &PaginatedResult[T]{
+		Data: data,
+		Pagination: &PaginationMeta{
+			Page:       page,
+			Limit:      limit,
+			TotalPages: totalPages,
+			TotalItems: total,
+			HasNext:    hasNext,
+			HasPrev:    hasPrev,
+			NextPage:   nextPage,
+			PrevPage:   prevPage,
+		},
+		Total: total,
+		Count: int64(len(data)),
+	}
+}
+
+// CreatePaginatedResult creates a paginated result from params
+func CreatePaginatedResult[T any](data []T, params *PaginationParams, total int64) *PaginatedResult[T] {
+	return NewPaginatedResult(data, params.Page, params.Limit, total)
+}
 // GetPaginationParams extracts pagination parameters from Gin context
 func GetPaginationParams(c *gin.Context) *PaginationParams {
 	page := getIntParam(c, "page", DefaultPage)

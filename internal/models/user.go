@@ -100,3 +100,75 @@ type Mute struct {
 	Duration  *time.Time         `bson:"duration,omitempty" json:"duration,omitempty"` // nil for permanent
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
+
+// Request structs for repository operations
+type UpdateProfileRequest struct {
+	DisplayName *string    `bson:"display_name,omitempty"`
+	Bio         *string    `bson:"bio,omitempty"`
+	Location    *string    `bson:"location,omitempty"`
+	Website     *string    `bson:"website,omitempty"`
+	Links       []UserLink `bson:"links,omitempty"`
+	BirthDate   *time.Time `bson:"birth_date,omitempty"`
+}
+
+type UpdatePrivacyRequest struct {
+	IsPrivate            *bool `bson:"is_private,omitempty"`
+	ShowActivity         *bool `bson:"show_activity,omitempty"`
+	AllowMessageRequests *bool `bson:"allow_message_requests,omitempty"`
+	ShowReadReceipts     *bool `bson:"show_read_receipts,omitempty"`
+	AllowTagging         *bool `bson:"allow_tagging,omitempty"`
+}
+
+type UpdateListRequest struct {
+	Name        *string `bson:"name,omitempty"`
+	Description *string `bson:"description,omitempty"`
+	IsPrivate   *bool   `bson:"is_private,omitempty"`
+}
+
+// Response structs
+type UserCounts struct {
+	FollowersCount int64 `json:"followers_count"`
+	FollowingCount int64 `json:"following_count"`
+	ThreadsCount   int64 `json:"threads_count"`
+	ListsCount     int64 `json:"lists_count"`
+}
+
+type UserStats struct {
+	TotalUsers         int64            `json:"total_users"`
+	ActiveUsers        int64            `json:"active_users"`
+	VerifiedUsers      int64            `json:"verified_users"`
+	SuspendedUsers     int64            `json:"suspended_users"`
+	NewUsersToday      int64            `json:"new_users_today"`
+	NewUsersThisWeek   int64            `json:"new_users_this_week"`
+	NewUsersThisMonth  int64            `json:"new_users_this_month"`
+	UsersByCountry     map[string]int64 `json:"users_by_country"`
+	AgeDistribution    map[string]int64 `json:"age_distribution"`
+	GenderDistribution map[string]int64 `json:"gender_distribution"`
+}
+
+type GrowthMetrics struct {
+	Period         string        `json:"period"`
+	NewUsers       int64         `json:"new_users"`
+	ActiveUsers    int64         `json:"active_users"`
+	RetainedUsers  int64         `json:"retained_users"`
+	ChurnRate      float64       `json:"churn_rate"`
+	GrowthRate     float64       `json:"growth_rate"`
+	DailyBreakdown []DailyGrowth `json:"daily_breakdown"`
+}
+
+type DailyGrowth struct {
+	Date        time.Time `json:"date"`
+	NewUsers    int64     `json:"new_users"`
+	ActiveUsers int64     `json:"active_users"`
+}
+
+type UserSession struct {
+	ID        primitive.ObjectID `json:"id"`
+	UserID    primitive.ObjectID `json:"user_id"`
+	Token     string             `json:"token"`
+	IPAddress string             `json:"ip_address"`
+	UserAgent string             `json:"user_agent"`
+	CreatedAt time.Time          `json:"created_at"`
+	ExpiresAt time.Time          `json:"expires_at"`
+	LastUsed  time.Time          `json:"last_used"`
+}

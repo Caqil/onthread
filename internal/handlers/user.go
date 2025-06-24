@@ -147,10 +147,10 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	user, err := h.userService.UpdateProfile(c.Request.Context(), userID.(primitive.ObjectID), &services.UpdateProfileRequest{
-		DisplayName: req.DisplayName,
-		Bio:         req.Bio,
-		Location:    req.Location,
-		Website:     req.Website,
+		DisplayName: &req.DisplayName,
+		Bio:         &req.Bio,
+		Location:    &req.Location,
+		Website:     &req.Website,
 		Links:       req.Links,
 	})
 
@@ -233,7 +233,7 @@ func (h *UserHandler) RemoveAvatar(c *gin.Context) {
 		return
 	}
 
-	err := h.userService.RemoveAvatar(c.Request.Context(), userID.(primitive.ObjectID))
+	_, err := h.userService.RemoveAvatar(c.Request.Context(), userID.(primitive.ObjectID))
 	if err != nil {
 		utils.InternalServerError(c, "Failed to remove avatar")
 		return
@@ -250,7 +250,7 @@ func (h *UserHandler) RemoveCover(c *gin.Context) {
 		return
 	}
 
-	err := h.userService.RemoveCover(c.Request.Context(), userID.(primitive.ObjectID))
+	_, err := h.userService.RemoveCover(c.Request.Context(), userID.(primitive.ObjectID))
 	if err != nil {
 		utils.InternalServerError(c, "Failed to remove cover")
 		return
@@ -267,7 +267,7 @@ func (h *UserHandler) GetSettings(c *gin.Context) {
 		return
 	}
 
-	settings, err := h.userService.GetUserSettings(c.Request.Context(), userID.(primitive.ObjectID))
+	settings, err := h.userService.GetSettings(c.Request.Context(), userID.(primitive.ObjectID))
 	if err != nil {
 		utils.InternalServerError(c, "Failed to get settings")
 		return
@@ -294,15 +294,13 @@ func (h *UserHandler) UpdateSettings(c *gin.Context) {
 		return
 	}
 
-	settings, err := h.userService.UpdateSettings(c.Request.Context(), userID.(primitive.ObjectID), &req)
+	_, err := h.userService.UpdateSettings(c.Request.Context(), userID.(primitive.ObjectID), &req)
 	if err != nil {
 		utils.InternalServerError(c, "Failed to update settings")
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Settings updated successfully", gin.H{
-		"settings": settings,
-	})
+	utils.SuccessResponse(c, http.StatusOK, "Settings updated successfully", nil)
 }
 
 // GetPrivacySettings returns privacy settings
@@ -499,7 +497,13 @@ func (h *UserHandler) GetMyFollowers(c *gin.Context) {
 
 	params := utils.GetPaginationParams(c)
 
-	result, err := h.userService.GetMyFollowers(c.Request.Context(), userID.(primitive.ObjectID), params)
+	user, err := h.userService.GetUserByID(c.Request.Context(), userID.(primitive.ObjectID))
+	if err != nil {
+		utils.InternalServerError(c, "Failed to get user")
+		return
+	}
+
+	result, err := h.userService.GetFollowers(c.Request.Context(), user.Username, nil, params)
 	if err != nil {
 		utils.InternalServerError(c, "Failed to get followers")
 		return
@@ -520,7 +524,7 @@ func (h *UserHandler) GetMyFollowing(c *gin.Context) {
 
 	params := utils.GetPaginationParams(c)
 
-	result, err := h.userService.GetMyFollowing(c.Request.Context(), userID.(primitive.ObjectID), params)
+	result, err := h.userService.GetFollowing(c.Request.Context(), userID.(primitive.ObjectID).Hex(), nil, params)
 	if err != nil {
 		utils.InternalServerError(c, "Failed to get following")
 		return
@@ -785,9 +789,6 @@ func (h *UserHandler) GetMutedUsers(c *gin.Context) {
 		Pagination: result.Pagination,
 	})
 }
-
-// Additional user management methods would continue here...
-// Due to length constraints, I'll continue with the key methods that show the pattern
 
 // GetUserThreads returns threads by a specific user
 func (h *UserHandler) GetUserThreads(c *gin.Context) {
@@ -1192,8 +1193,8 @@ func (h *UserHandler) UpdateList(c *gin.Context) {
 	}
 
 	list, err := h.userService.UpdateList(c.Request.Context(), userID.(primitive.ObjectID), listID, &services.UpdateListRequest{
-		Name:        req.Name,
-		Description: req.Description,
+		Name:        &req.Name,
+		Description: &req.Description,
 		IsPrivate:   req.IsPrivate,
 	})
 
@@ -1403,12 +1404,9 @@ func (h *UserHandler) UnfollowList(c *gin.Context) {
 // Verification
 func (h *UserHandler) RequestVerification(c *gin.Context) {
 	var req struct {
-		Category    string `json:"category" binding:"required"`
-		Description string `json:"description" binding:"required,max=1000"`
-		Evidence    []struct {
-			Type string `json:"type" binding:"required"`
-			URL  string `json:"url" binding:"required,url"`
-		} `json:"evidence" binding:"required,min=1,max=5"`
+		Category    string                          `json:"category" binding:"required"`
+		Description string                          `json:"description" binding:"required,max=1000"`
+		Evidence    []services.VerificationEvidence `json:"evidence" binding:"required,min=1,max=5"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -1715,7 +1713,7 @@ func (h *UserHandler) GetUserActivityAdmin(c *gin.Context) {
 
 	params := utils.GetPaginationParams(c)
 
-	activity, err := h.userService.GetUserActivityAdmin(c.Request.Context(), userID, params)
+	activity, err := h.userService.GetUserActivityAdmin(c.Request.Context(), userID, params, "")
 	if err != nil {
 		utils.InternalServerError(c, "Failed to get user activity")
 		return
