@@ -929,7 +929,7 @@ func (s *threadService) ScheduleThread(ctx context.Context, req *ScheduleThreadR
 		MediaFiles:     req.MediaFiles,
 		Type:           "thread",
 		Hashtags:       req.Hashtags,
-		Mentions:       req.Mentions,
+		Mentions:       s.usernamesToObjectIDs(ctx, req.Mentions),
 		Visibility:     req.Visibility,
 		ReplySettings:  req.ReplySettings,
 		Location:       req.Location,

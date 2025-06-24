@@ -906,8 +906,6 @@ func (r *interactionRepository) CreateReport(ctx context.Context, report *models
 	r.logger.WithFields(map[string]interface{}{
 		"report_id":   report.ID,
 		"reporter_id": report.ReporterID,
-		"target_type": report.TargetType,
-		"target_id":   report.TargetID,
 		"report_type": report.ReportType,
 		"category":    report.Category,
 	}).Info("Report created successfully")

@@ -52,7 +52,8 @@ func (h *InteractionHandler) LikeThread(c *gin.Context) {
 	}
 
 	// Check if thread exists and user can interact with it
-	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &userID.(primitive.ObjectID))
+	uid := userID.(primitive.ObjectID)
+	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &uid)
 	if err != nil {
 		if errors.IsAppError(err) {
 			appErr := err.(*errors.AppError)
@@ -174,7 +175,8 @@ func (h *InteractionHandler) RepostThread(c *gin.Context) {
 	}
 
 	// Check if thread exists and user can interact with it
-	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &userID.(primitive.ObjectID))
+	uid := userID.(primitive.ObjectID)
+	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &uid)
 	if err != nil {
 		if errors.IsAppError(err) {
 			appErr := err.(*errors.AppError)
@@ -333,7 +335,8 @@ func (h *InteractionHandler) QuoteThread(c *gin.Context) {
 	}
 
 	// Check if thread exists and user can interact with it
-	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &userID.(primitive.ObjectID))
+	uid := userID.(primitive.ObjectID)
+	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &uid)
 	if err != nil {
 		if errors.IsAppError(err) {
 			appErr := err.(*errors.AppError)
@@ -420,8 +423,8 @@ func (h *InteractionHandler) ReplyThread(c *gin.Context) {
 		return
 	}
 
-	// Check if thread exists and user can reply to it
-	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &userID.(primitive.ObjectID))
+	uid := userID.(primitive.ObjectID)
+	thread, err := h.threadService.GetThread(c.Request.Context(), threadID, &uid)
 	if err != nil {
 		if errors.IsAppError(err) {
 			appErr := err.(*errors.AppError)
@@ -514,7 +517,8 @@ func (h *InteractionHandler) BookmarkThread(c *gin.Context) {
 	}
 
 	// Check if thread exists
-	_, err = h.threadService.GetThread(c.Request.Context(), threadID, &userID.(primitive.ObjectID))
+	uid := userID.(primitive.ObjectID)
+	_, err = h.threadService.GetThread(c.Request.Context(), threadID, &uid)
 	if err != nil {
 		if errors.IsAppError(err) {
 			appErr := err.(*errors.AppError)
@@ -654,7 +658,8 @@ func (h *InteractionHandler) ShareThread(c *gin.Context) {
 	}
 
 	// Check if thread exists
-	_, err = h.threadService.GetThread(c.Request.Context(), threadID, &userID.(primitive.ObjectID))
+	uid := userID.(primitive.ObjectID)
+	_, err = h.threadService.GetThread(c.Request.Context(), threadID, &uid)
 	if err != nil {
 		if errors.IsAppError(err) {
 			appErr := err.(*errors.AppError)
@@ -722,7 +727,8 @@ func (h *InteractionHandler) ReportThread(c *gin.Context) {
 	}
 
 	// Check if thread exists
-	_, err = h.threadService.GetThread(c.Request.Context(), threadID, &userID.(primitive.ObjectID))
+	uid := userID.(primitive.ObjectID)
+	_, err = h.threadService.GetThread(c.Request.Context(), threadID, &uid)
 	if err != nil {
 		if errors.IsAppError(err) {
 			appErr := err.(*errors.AppError)
