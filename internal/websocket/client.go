@@ -3,7 +3,9 @@ package websocket
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -82,6 +84,17 @@ func DefaultClientConfig() *ClientConfig {
 	}
 }
 
+// getClientIP extracts client IP from request
+func getClientIP(req *http.Request) string {
+	if ip := req.Header.Get("X-Forwarded-For"); ip != "" {
+		return strings.Split(ip, ",")[0]
+	}
+	if ip := req.Header.Get("X-Real-IP"); ip != "" {
+		return ip
+	}
+	return req.RemoteAddr
+}
+
 // NewClient creates a new WebSocket client
 func NewClient(hub *Hub, conn *websocket.Conn, userID primitive.ObjectID, user *models.User, req *http.Request) *Client {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -120,7 +133,7 @@ func (c *Client) Start(config *ClientConfig) {
 	c.Conn.SetReadDeadline(time.Now().Add(config.PongWait))
 	c.Conn.SetPongHandler(func(string) error {
 		c.Conn.SetReadDeadline(time.Now().Add(config.PongWait))
-		c.updateLastActivity()
+		c.UpdateLastActivity()
 		return nil
 	})
 
@@ -220,6 +233,25 @@ func (c *Client) SendError(code, message, details string) {
 	c.mu.Unlock()
 }
 
+// WriteMessage writes a message to the WebSocket connection
+func (c *Client) WriteMessage(message *Message) error {
+	data, err := message.ToJSON()
+	if err != nil {
+		return err
+	}
+	return c.Conn.WriteMessage(websocket.TextMessage, data)
+}
+
+// UpdateLastActivity updates the client's last activity time
+func (c *Client) UpdateLastActivity() {
+	c.updateLastActivity()
+}
+
+// Close closes the client connection
+func (c *Client) Close() {
+	c.Stop() // Delegate to existing Stop method
+}
+
 // JoinRoom adds the client to a room
 func (c *Client) JoinRoom(room string) {
 	c.mu.Lock()
@@ -259,6 +291,13 @@ func (c *Client) GetRooms() []string {
 		rooms = append(rooms, room)
 	}
 	return rooms
+}
+
+// updateLastActivity updates the last activity timestamp (private method)
+func (c *Client) updateLastActivity() {
+	c.mu.Lock()
+	c.LastActivity = time.Now()
+	c.mu.Unlock()
 }
 
 // readPump pumps messages from the WebSocket connection to the hub
@@ -427,7 +466,7 @@ func (c *Client) handleUserActivityMessage(message *Message) {
 		return
 	}
 
-	// Update user activity in the hub
+	// Update user activity in hub
 	c.Hub.UpdateUserActivity(c.UserID, activityMsg.Activity, activityMsg.ResourceID, activityMsg.ResourceType)
 }
 
@@ -440,57 +479,21 @@ func (c *Client) handleTypingMessage(message *Message) {
 		return
 	}
 
+	// Set user info
+	typingMsg.UserID = c.UserID.Hex()
+	typingMsg.Username = c.User.Username
+
 	// Broadcast typing indicator to conversation participants
-	room := "conversation_" + typingMsg.ConversationID
-	c.Hub.BroadcastToRoom(room, CreateTypingMessage(
-		typingMsg.ConversationID,
-		c.UserID.Hex(),
-		c.User.Username,
-		typingMsg.IsTyping,
-	), c.UserID)
-}
+	if typingMsg.ConversationID != "" {
+		typingMessage := CreateTypingMessage(
+			typingMsg.ConversationID,
+			typingMsg.UserID,
+			typingMsg.Username,
+			typingMsg.IsTyping,
+		)
 
-// updateLastActivity updates the client's last activity timestamp
-func (c *Client) updateLastActivity() {
-	c.mu.Lock()
-	c.LastActivity = time.Now()
-	c.mu.Unlock()
-}
-
-// GetStats returns client statistics
-func (c *Client) GetStats() map[string]interface{} {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	return map[string]interface{}{
-		"id":                c.ID,
-		"user_id":           c.UserID.Hex(),
-		"username":          c.User.Username,
-		"connected_at":      c.ConnectedAt,
-		"last_activity":     c.LastActivity,
-		"duration_seconds":  time.Since(c.ConnectedAt).Seconds(),
-		"is_authenticated":  c.IsAuthenticated,
-		"is_online":         c.IsOnline,
-		"messages_sent":     c.MessagesSent,
-		"messages_received": c.MessagesReceived,
-		"error_count":       c.ErrorCount,
-		"rooms":             c.GetRooms(),
-		"ip_address":        c.IPAddress,
+		// Broadcast to conversation room
+		roomID := fmt.Sprintf("conversation:%s", typingMsg.ConversationID)
+		c.Hub.BroadcastToRoom(roomID, typingMessage, c.UserID)
 	}
-}
-
-// Helper function to get client IP address
-func getClientIP(req *http.Request) string {
-	// Check X-Forwarded-For header
-	if xForwardedFor := req.Header.Get("X-Forwarded-For"); xForwardedFor != "" {
-		return xForwardedFor
-	}
-
-	// Check X-Real-IP header
-	if xRealIP := req.Header.Get("X-Real-IP"); xRealIP != "" {
-		return xRealIP
-	}
-
-	// Fall back to RemoteAddr
-	return req.RemoteAddr
 }

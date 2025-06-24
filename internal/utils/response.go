@@ -17,7 +17,14 @@ type APIResponse struct {
 	Timestamp time.Time   `json:"timestamp"`
 	RequestID string      `json:"request_id,omitempty"`
 }
-
+type Pagination struct {
+	Page        int   `json:"page"`
+	Limit       int   `json:"limit"`
+	Total       int64 `json:"total"`
+	TotalPages  int   `json:"total_pages"`
+	HasNext     bool  `json:"has_next"`
+	HasPrevious bool  `json:"has_previous"`
+}
 type APIError struct {
 	Code    string            `json:"code"`
 	Message string            `json:"message"`

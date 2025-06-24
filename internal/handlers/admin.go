@@ -246,7 +246,7 @@ func (h *AdminHandler) GetSystemMetrics(c *gin.Context) {
 }
 
 func (h *AdminHandler) GetRecentActivity(c *gin.Context) {
-	params := utils.GetPaginationParams(c)
+	utils.GetPaginationParams(c)
 	limit := c.DefaultQuery("limit", "50")
 	limitInt, _ := strconv.Atoi(limit)
 

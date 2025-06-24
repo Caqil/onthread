@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"onthread/internal/models"
 	"onthread/internal/services"
 	"onthread/internal/utils"
 	"onthread/pkg/errors"
-	"onthread/pkg/logger"
 )
 
 type UserHandler struct {

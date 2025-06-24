@@ -93,13 +93,13 @@ type AuthMessage struct {
 	Type  string `json:"type"` // "access", "refresh"
 }
 
-// SubscribeMessage represents room subscription
+// SubscribeMessage represents room subscription (FIXED: Added missing struct)
 type SubscribeMessage struct {
 	Room   string `json:"room"`
 	Action string `json:"action"` // "join", "leave"
 }
 
-// UserActivityMessage represents user activity updates
+// UserActivityMessage represents user activity updates (FIXED: Added missing struct)
 type UserActivityMessage struct {
 	UserID       string    `json:"user_id"`
 	Activity     string    `json:"activity"` // "viewing_thread", "in_conversation", "idle"
@@ -255,6 +255,7 @@ func (m *Message) IsValid() bool {
 		"auth",
 		"subscribe",
 		"user_activity",
+		"heartbeat",
 	}
 
 	for _, validType := range validTypes {
