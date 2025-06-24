@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"thread-app-backend/internal/services"
-	"thread-app-backend/internal/utils"
-	"thread-app-backend/pkg/constants"
-	"thread-app-backend/pkg/errors"
-	"thread-app-backend/pkg/logger"
+	"onthread/internal/services"
+	"onthread/internal/utils"
+	"onthread/pkg/constants"
+	"onthread/pkg/errors"
+	"onthread/pkg/logger"
 )
 
 type UploadHandler struct {

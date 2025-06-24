@@ -7,12 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"thread-app-backend/internal/models"
-	"thread-app-backend/internal/repository"
-	"thread-app-backend/internal/services"
-	"thread-app-backend/internal/utils"
-	"thread-app-backend/pkg/errors"
-	"thread-app-backend/pkg/logger"
+	"onthread/internal/models"
+	"onthread/internal/repository"
+	"onthread/internal/services"
+	"onthread/internal/utils"
+	"onthread/pkg/errors"
+	"onthread/pkg/logger"
 )
 
 type InteractionHandler struct {
